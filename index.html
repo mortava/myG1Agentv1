@@ -3,8 +3,45 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
-    <title>G1 Mortgage Assistant Widget</title>
     <meta name="robots" content="noindex, nofollow" />
+
+    <!--
+    ╔══════════════════════════════════════════════════════════════╗
+    ║              WHITE LABEL CONFIG - EDIT BELOW                ║
+    ║  Change these values for each new client deployment.        ║
+    ╚══════════════════════════════════════════════════════════════╝
+    -->
+    <script>
+      const WHITE_LABEL = {
+        // Brand name (split into two parts for two-tone logo)
+        brandPart1:     "Open",           // Bold black text
+        brandPart2:     "Qual",           // Gold/accent colored text
+
+        // Page title (browser tab)
+        pageTitle:      "Mortgage AI Assistant",
+
+        // Tagline below the chat input
+        taglineName:    "Rick Kleinfinger",       // "AI Assistant built for ___"
+        taglineLink:    "https://example.com",    // "Visit ___'s Site" URL
+        taglineLinkText:"Visit Rick's Site",      // Link display text
+
+        // Disclaimer
+        disclaimer:     "This AI Tool is not a part of the above mentioned mortgage professional's Company, nothing provided by this tool is any type of commitment to lend or arrange any type of loan. AI can make mistakes. Check important info. Intended for information use only.",
+
+        // Input placeholder
+        placeholder:    "Ask me anything about your mortgage...",
+
+        // Welcome message (shown before chat starts)
+        welcomeText:    "Ask me anything about mortgages, rates, refinancing, or home buying.",
+
+        // Accent color (brand color for links, focus rings, etc.)
+        accentColor:    "#E5A93D",        // Gold
+      };
+
+      document.title = WHITE_LABEL.pageTitle;
+    </script>
+
+    <title>Mortgage AI Assistant</title>
 
     <style>
       :root {
@@ -581,20 +618,107 @@
         border-color: var(--accent);
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
       }
+
+      /* ── White Label: Brand Header ── */
+      .brand-header {
+        padding: 16px 16px 0;
+        flex-shrink: 0;
+      }
+
+      .brand-logo {
+        font-size: 28px;
+        font-weight: 800;
+        line-height: 1.2;
+        letter-spacing: -0.5px;
+      }
+
+      .brand-logo .part1 {
+        color: #1a1a1a;
+      }
+
+      .brand-logo .part2 {
+        color: var(--accent-brand, #E5A93D);
+      }
+
+      /* ── White Label: Footer / Tagline ── */
+      .brand-footer {
+        padding: 8px 16px 12px;
+        flex-shrink: 0;
+        background: var(--bg-primary);
+      }
+
+      .brand-tagline {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 4px 12px;
+        margin-bottom: 6px;
+      }
+
+      .brand-tagline .built-for {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
+
+      .brand-tagline .visit-link {
+        font-size: 13px;
+        color: var(--text-secondary);
+        text-decoration: none;
+      }
+
+      .brand-tagline .visit-link:hover {
+        text-decoration: underline;
+      }
+
+      .brand-disclaimer {
+        font-size: 10px;
+        color: var(--text-secondary);
+        line-height: 1.4;
+      }
+
+      /* Hide brand header in centered (pre-chat) mode — it's shown in input zone instead */
+      .chat-widget.centered .brand-header {
+        display: none;
+      }
+
+      .chat-widget.centered .brand-header-inline {
+        display: block;
+        margin-bottom: 12px;
+      }
+
+      .chat-widget:not(.centered) .brand-header-inline {
+        display: none;
+      }
     </style>
   </head>
 
   <body>
     <div class="chat-widget centered" id="chatWidget" role="main" aria-label="Mortgage Assistant Chat">
+
+      <!-- Brand Header (visible after chat starts, pinned to top) -->
+      <div class="brand-header" id="brandHeader">
+        <div class="brand-logo">
+          <span class="part1" id="brandPart1"></span><span class="part2" id="brandPart2"></span>
+        </div>
+      </div>
+
       <!-- Messages Area -->
       <div class="messages-container" id="messagesContainer" role="log" aria-live="polite" aria-label="Chat messages">
         <div class="welcome-prompt" id="welcomePrompt">
-          <p>Ask me anything about mortgages, rates, refinancing, or home buying.</p>
+          <p id="welcomeText"></p>
         </div>
       </div>
 
       <!-- Input Zone (floats center initially, docks to bottom on chat start) -->
       <div class="input-zone" id="inputZone">
+        <!-- Inline brand logo (visible only in centered/pre-chat state) -->
+        <div class="brand-header-inline" id="brandHeaderInline">
+          <div class="brand-logo">
+            <span class="part1" id="brandPart1Inline"></span><span class="part2" id="brandPart2Inline"></span>
+          </div>
+        </div>
         <form class="input-container" id="inputForm" autocomplete="off" role="form" aria-label="Send a message">
           <div class="input-wrapper">
             <label for="inputField" class="sr-only" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0;">Type your message</label>
@@ -602,7 +726,7 @@
               id="inputField"
               class="input-field"
               rows="2"
-              placeholder="Ask me anything about your mortgage..."
+              placeholder=""
               aria-label="Message input"
               autocomplete="off"
               enterkeyhint="send"
@@ -623,7 +747,16 @@
             </div>
           </div>
         </form>
-        <div class="input-disclaimer" aria-hidden="true">AI agents can make mistakes. Check important info. Intended for informational use.</div>
+        <div class="input-disclaimer" aria-hidden="true" id="inputDisclaimer"></div>
+      </div>
+
+      <!-- Brand Footer: Tagline + Disclaimer -->
+      <div class="brand-footer" id="brandFooter">
+        <div class="brand-tagline">
+          <span class="built-for" id="builtFor"></span>
+          <a class="visit-link" id="visitLink" href="#" target="_blank" rel="noopener"></a>
+        </div>
+        <div class="brand-disclaimer" id="brandDisclaimer"></div>
       </div>
     </div>
 
@@ -950,6 +1083,38 @@
         // ── Init ──
         updateSendBtn();
         inputField.focus();
+
+        // ── Apply WHITE_LABEL config to DOM ──
+        if (typeof WHITE_LABEL !== 'undefined') {
+          const wl = WHITE_LABEL;
+
+          // Brand logo (both pinned header and inline centered version)
+          document.getElementById('brandPart1').textContent = wl.brandPart1;
+          document.getElementById('brandPart2').textContent = wl.brandPart2;
+          document.getElementById('brandPart1Inline').textContent = wl.brandPart1;
+          document.getElementById('brandPart2Inline').textContent = wl.brandPart2;
+
+          // Accent color for brand logo part2
+          document.documentElement.style.setProperty('--accent-brand', wl.accentColor);
+
+          // Welcome text
+          document.getElementById('welcomeText').textContent = wl.welcomeText;
+
+          // Input placeholder
+          inputField.placeholder = wl.placeholder;
+
+          // Disclaimer under input
+          document.getElementById('inputDisclaimer').textContent = wl.disclaimer;
+
+          // Footer tagline
+          document.getElementById('builtFor').textContent = 'AI Assistant  built for ' + wl.taglineName;
+          const visitLink = document.getElementById('visitLink');
+          visitLink.href = wl.taglineLink;
+          visitLink.textContent = wl.taglineLinkText;
+
+          // Footer disclaimer
+          document.getElementById('brandDisclaimer').textContent = wl.disclaimer;
+        }
 
         // Notify parent frame the widget is ready
         try {
