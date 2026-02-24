@@ -14,16 +14,16 @@
     <script>
       const WHITE_LABEL = {
         // Brand name (split into two parts for two-tone logo)
-        brandPart1:     "Open",           // Bold black text
-        brandPart2:     "Qual",           // Gold/accent colored text
+        brandPart1:     "Open",           // Bold dark text
+        brandPart2:     "Qual",           // Accent colored text (lighter/muted)
 
         // Page title (browser tab)
         pageTitle:      "Mortgage AI Assistant",
 
         // Tagline below the chat input
-        taglineName:    "Rick Kleinfinger",       // "AI Assistant built for ___"
-        taglineLink:    "https://example.com",    // "Visit ___'s Site" URL
-        taglineLinkText:"Visit Rick's Site",      // Link display text
+        taglineName:    "Rick Kleinfinger",          // "AI Assistant to ___"
+        taglineLink:    "https://example.com",       // "Visit ___'s Website" URL
+        taglineLinkText:"Visit Rick's Website",      // Link display text
 
         // Disclaimer
         disclaimer:     "This AI Tool is not a part of the above mentioned mortgage professional's Company, nothing provided by this tool is any type of commitment to lend or arrange any type of loan. AI can make mistakes. Check important info. Intended for information use only.",
@@ -31,11 +31,8 @@
         // Input placeholder
         placeholder:    "Ask me anything about your mortgage...",
 
-        // Welcome message (shown before chat starts)
-        welcomeText:    "Ask me anything about mortgages, rates, refinancing, or home buying.",
-
-        // Accent color (brand color for links, focus rings, etc.)
-        accentColor:    "#E5A93D",        // Gold
+        // Accent color for brandPart2 text
+        accentColor:    "#9CA3AF",        // Muted grey
       };
 
       document.title = WHITE_LABEL.pageTitle;
@@ -45,6 +42,7 @@
 
     <style>
       :root {
+        --bg-page: #F3F4F6;
         --bg-primary: #FFFFFF;
         --bg-assistant: #F3F4F6;
         --bg-user: #DBEAFE;
@@ -53,7 +51,7 @@
         --text-inverse: #FFFFFF;
         --border: #E5E7EB;
         --accent: #3B82F6;
-        --send-btn: #9CA3AF;
+        --send-btn: #C9CDD3;
         --send-btn-hover: #3B82F6;
         --radius-sm: 6px;
         --radius-md: 12px;
@@ -75,7 +73,7 @@
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
         font-size: 15px;
         color: var(--text-primary);
-        background: var(--bg-primary);
+        background: var(--bg-page);
         line-height: 1.5;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
@@ -88,7 +86,7 @@
         height: 100dvh;
         height: 100vh;
         width: 100%;
-        background: var(--bg-primary);
+        background: var(--bg-page);
         position: relative;
       }
 
@@ -125,27 +123,11 @@
 
       /* ── Welcome Message ── */
       .welcome-prompt {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        flex: 1;
-        padding: 24px 16px;
-        text-align: center;
-        min-height: 200px;
-        opacity: 1;
-        transition: opacity 0.3s ease;
+        display: none;
       }
 
       .welcome-prompt.hidden {
         display: none;
-      }
-
-      .welcome-prompt p {
-        font-size: 15px;
-        color: var(--text-secondary);
-        max-width: 260px;
-        line-height: 1.6;
       }
 
       /* ── Message Bubbles ── */
@@ -186,15 +168,9 @@
         border-bottom-right-radius: 4px;
       }
 
-      /* Static disclaimer under input */
+      /* Static disclaimer under input — hidden, replaced by brand footer */
       .input-disclaimer {
-        font-size: 10px;
-        color: var(--text-secondary);
-        text-align: center;
-        padding: 4px 12px 8px;
-        line-height: 1.3;
-        background: var(--bg-primary);
-        flex-shrink: 0;
+        display: none;
       }
 
       /* ── Rich Text in Assistant Bubbles ── */
@@ -312,16 +288,12 @@
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        width: calc(100% - 24px);
-        max-width: 600px;
+        width: calc(100% - 48px);
+        max-width: 700px;
       }
 
       .chat-widget.centered .input-container {
         border-top: none;
-      }
-
-      .chat-widget.centered .input-disclaimer {
-        padding-bottom: 0;
       }
 
       /* ── Docked input state (after chat starts) ── */
@@ -334,10 +306,16 @@
       .input-container {
         display: flex;
         align-items: stretch;
+        padding: 0;
+        border-top: none;
+        background: transparent;
+        flex-shrink: 0;
+      }
+
+      .chat-widget:not(.centered) .input-container {
         padding: 12px;
         border-top: 1px solid var(--border);
         background: var(--bg-primary);
-        flex-shrink: 0;
       }
 
       /* ── Thinking Stages ── */
@@ -619,9 +597,9 @@
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
       }
 
-      /* ── White Label: Brand Header ── */
+      /* ── White Label: Brand Logo ── */
       .brand-header {
-        padding: 16px 16px 0;
+        padding: 16px 16px 8px;
         flex-shrink: 0;
       }
 
@@ -633,18 +611,16 @@
       }
 
       .brand-logo .part1 {
-        color: #1a1a1a;
+        color: #1F2937;
       }
 
       .brand-logo .part2 {
-        color: var(--accent-brand, #E5A93D);
+        color: var(--accent-brand, #9CA3AF);
       }
 
-      /* ── White Label: Footer / Tagline ── */
-      .brand-footer {
-        padding: 8px 16px 12px;
-        flex-shrink: 0;
-        background: var(--bg-primary);
+      /* ── White Label: Tagline + Disclaimer (inside input-zone) ── */
+      .brand-tagline-block {
+        padding: 12px 4px 0;
       }
 
       .brand-tagline {
@@ -653,42 +629,60 @@
         justify-content: space-between;
         flex-wrap: wrap;
         gap: 4px 12px;
-        margin-bottom: 6px;
+        margin-bottom: 8px;
       }
 
       .brand-tagline .built-for {
-        font-size: 14px;
-        font-weight: 700;
+        font-size: 15px;
+        color: var(--text-secondary);
+        font-weight: 400;
+      }
+
+      .brand-tagline .built-for .name {
         color: var(--text-primary);
+        font-weight: 700;
       }
 
       .brand-tagline .visit-link {
-        font-size: 13px;
+        font-size: 14px;
         color: var(--text-secondary);
         text-decoration: none;
+        white-space: nowrap;
       }
 
       .brand-tagline .visit-link:hover {
-        text-decoration: underline;
+        color: var(--text-primary);
       }
 
       .brand-disclaimer {
-        font-size: 10px;
+        font-size: 11px;
         color: var(--text-secondary);
-        line-height: 1.4;
+        line-height: 1.5;
       }
 
-      /* Hide brand header in centered (pre-chat) mode — it's shown in input zone instead */
+      /* ── White Label: Brand Footer (docked mode) ── */
+      .brand-footer {
+        padding: 8px 16px 12px;
+        flex-shrink: 0;
+        background: var(--bg-page);
+      }
+
+      /* Hide pinned header in centered mode — show inline logo above input instead */
       .chat-widget.centered .brand-header {
         display: none;
       }
 
       .chat-widget.centered .brand-header-inline {
         display: block;
-        margin-bottom: 12px;
+        margin-bottom: 8px;
       }
 
       .chat-widget:not(.centered) .brand-header-inline {
+        display: none;
+      }
+
+      /* In centered mode, hide the separate footer — tagline is in the input zone */
+      .chat-widget.centered .brand-footer {
         display: none;
       }
     </style>
@@ -747,16 +741,23 @@
             </div>
           </div>
         </form>
-        <div class="input-disclaimer" aria-hidden="true" id="inputDisclaimer"></div>
+        <!-- Tagline + Disclaimer (inside input zone so it centers with input) -->
+        <div class="brand-tagline-block" id="brandTaglineBlock">
+          <div class="brand-tagline">
+            <span class="built-for" id="builtFor"></span>
+            <a class="visit-link" id="visitLink" href="#" target="_blank" rel="noopener"></a>
+          </div>
+          <div class="brand-disclaimer" id="brandDisclaimer"></div>
+        </div>
       </div>
 
-      <!-- Brand Footer: Tagline + Disclaimer -->
+      <!-- Brand Footer: Tagline + Disclaimer (visible in docked/chat mode) -->
       <div class="brand-footer" id="brandFooter">
         <div class="brand-tagline">
-          <span class="built-for" id="builtFor"></span>
-          <a class="visit-link" id="visitLink" href="#" target="_blank" rel="noopener"></a>
+          <span class="built-for" id="builtForDocked"></span>
+          <a class="visit-link" id="visitLinkDocked" href="#" target="_blank" rel="noopener"></a>
         </div>
-        <div class="brand-disclaimer" id="brandDisclaimer"></div>
+        <div class="brand-disclaimer" id="brandDisclaimerDocked"></div>
       </div>
     </div>
 
@@ -1097,23 +1098,23 @@
           // Accent color for brand logo part2
           document.documentElement.style.setProperty('--accent-brand', wl.accentColor);
 
-          // Welcome text
-          document.getElementById('welcomeText').textContent = wl.welcomeText;
-
           // Input placeholder
           inputField.placeholder = wl.placeholder;
 
-          // Disclaimer under input
-          document.getElementById('inputDisclaimer').textContent = wl.disclaimer;
+          // Tagline — "AI Assistant to <Name>"
+          const taglineHTML = 'AI Assistant to <span class="name">' + wl.taglineName + '</span>';
+          document.getElementById('builtFor').innerHTML = taglineHTML;
+          document.getElementById('builtForDocked').innerHTML = taglineHTML;
 
-          // Footer tagline
-          document.getElementById('builtFor').textContent = 'AI Assistant  built for ' + wl.taglineName;
-          const visitLink = document.getElementById('visitLink');
-          visitLink.href = wl.taglineLink;
-          visitLink.textContent = wl.taglineLinkText;
+          // Visit link with arrow
+          const linkText = wl.taglineLinkText + ' \u203A';
+          const setLink = (el) => { el.href = wl.taglineLink; el.textContent = linkText; };
+          setLink(document.getElementById('visitLink'));
+          setLink(document.getElementById('visitLinkDocked'));
 
-          // Footer disclaimer
+          // Disclaimer
           document.getElementById('brandDisclaimer').textContent = wl.disclaimer;
+          document.getElementById('brandDisclaimerDocked').textContent = wl.disclaimer;
         }
 
         // Notify parent frame the widget is ready
