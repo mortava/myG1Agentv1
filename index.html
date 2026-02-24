@@ -737,6 +737,11 @@
       .chat-widget.centered .brand-footer {
         display: none;
       }
+
+      /* In docked (chat active) mode, hide the tagline inside input-zone — use footer instead */
+      .chat-widget:not(.centered) .brand-tagline-block {
+        display: none;
+      }
     </style>
   </head>
 
