@@ -514,63 +514,115 @@
         }
       }
 
-      /* ── Responsive: Mobile ── */
-      @media (max-width: 600px) {
-        .messages-container {
-          padding: 12px 8px;
-          gap: 6px;
-        }
+      /* ── Chat Action Buttons (copy + share) ── */
+      .chat-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-top: 6px;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
 
-        .message-bubble {
-          font-size: 14px;
-          padding: 10px 14px;
-          max-width: 88%;
-        }
+      .message-row.assistant:hover .chat-actions,
+      .message-row.assistant .chat-actions.visible {
+        opacity: 1;
+      }
 
-        .input-container {
-          padding: 8px;
-        }
-
-        .input-wrapper {
-          padding: 10px 12px 8px;
-          min-height: 70px;
-        }
-
-        .input-field {
-          font-size: 16px;
+      /* Always show on touch devices */
+      @media (hover: none) {
+        .chat-actions {
+          opacity: 1;
         }
       }
 
-      /* ── Responsive: Tablet ── */
-      @media (min-width: 601px) and (max-width: 1024px) {
+      .chat-action-btn {
+        width: 28px;
+        height: 28px;
+        border: none;
+        background: transparent;
+        color: var(--text-secondary);
+        cursor: pointer;
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.15s, color 0.15s;
+        -webkit-tap-highlight-color: transparent;
+        padding: 0;
+      }
+
+      .chat-action-btn:hover {
+        background: var(--bg-assistant);
+        color: var(--text-primary);
+      }
+
+      .chat-action-btn.copied {
+        color: #10B981;
+      }
+
+      .chat-action-btn svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      /* ── Mobile-first: no constraints ── */
+      .messages-container {
+        padding: 12px 10px;
+        gap: 6px;
+      }
+
+      .message-bubble {
+        max-width: 90%;
+        font-size: 14px;
+        padding: 10px 14px;
+      }
+
+      .input-field {
+        font-size: 16px; /* prevents iOS zoom */
+      }
+
+      .input-wrapper {
+        min-height: 70px;
+        padding: 12px 14px 8px;
+      }
+
+      /* ── Tablet+ ── */
+      @media (min-width: 601px) {
         .messages-container {
-          padding: 14px 10px;
+          padding: 16px 12px;
+          gap: 8px;
         }
 
-        .input-container {
-          padding: 10px;
+        .message-bubble {
+          max-width: 85%;
+          font-size: 15px;
+          padding: 12px 16px;
         }
 
         .input-wrapper {
-          min-height: 74px;
-        }
-
-        .input-field {
-          font-size: 15px;
-        }
-      }
-
-      /* ── Desktop ── */
-      @media (min-width: 1025px) {
-        .message-bubble {
-          font-size: 15px;
+          min-height: 80px;
+          padding: 14px 16px 10px;
         }
       }
 
       /* ── Safe area for notched devices ── */
       @supports (padding-bottom: env(safe-area-inset-bottom)) {
-        .input-container {
-          padding-bottom: calc(12px + env(safe-area-inset-bottom));
+        .chat-widget:not(.centered) .input-zone {
+          padding-bottom: env(safe-area-inset-bottom);
+        }
+      }
+
+      /* Mobile: full-width centered input zone */
+      @media (max-width: 600px) {
+        .chat-widget.centered .input-zone {
+          width: calc(100% - 24px);
+          max-width: none;
+        }
+
+        .brand-tagline {
+          flex-direction: column;
+          gap: 2px;
         }
       }
 
@@ -885,6 +937,29 @@
 
         // ── Message Rendering ──
 
+        // ── Copy / Share SVG icons ──
+        const COPY_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+        const CHECK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+        const SHARE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>';
+
+        const copyText = (text, btn) => {
+          navigator.clipboard.writeText(text).then(() => {
+            btn.innerHTML = CHECK_ICON;
+            btn.classList.add('copied');
+            setTimeout(() => { btn.innerHTML = COPY_ICON; btn.classList.remove('copied'); }, 1500);
+          });
+        };
+
+        const shareText = (text) => {
+          if (navigator.share) {
+            navigator.share({ text: text }).catch(() => {});
+          } else {
+            navigator.clipboard.writeText(text).then(() => {
+              // Fallback: copy to clipboard
+            });
+          }
+        };
+
         const addMessage = (role, text, isError) => {
           // Clear thinking stages and remove indicator
           const thinkingEl = document.getElementById('thinkingIndicator');
@@ -908,6 +983,29 @@
           }
 
           row.appendChild(bubble);
+
+          // Add copy + share action buttons for assistant messages
+          if (role === 'assistant' && !isError) {
+            const actions = document.createElement('div');
+            actions.className = 'chat-actions';
+
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'chat-action-btn';
+            copyBtn.setAttribute('aria-label', 'Copy response');
+            copyBtn.innerHTML = COPY_ICON;
+            copyBtn.addEventListener('click', () => copyText(text, copyBtn));
+
+            const shareBtn = document.createElement('button');
+            shareBtn.className = 'chat-action-btn';
+            shareBtn.setAttribute('aria-label', 'Share response');
+            shareBtn.innerHTML = SHARE_ICON;
+            shareBtn.addEventListener('click', () => shareText(text));
+
+            actions.appendChild(copyBtn);
+            actions.appendChild(shareBtn);
+            row.appendChild(actions);
+          }
+
           messagesContainer.appendChild(row);
 
           // For user messages, scroll to bottom to show what they typed
